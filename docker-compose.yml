@@ -2,33 +2,44 @@ version: '3.8'
 
 services:
   nginx:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-nginx
     image: nginx
     ports:
       - "80:80"
     depends_on:
       - app
+    labels:
+      com.docker.compose.container-number: "2" 
 
-    app:
-      build:
-        context: .
-        dockerfile: Dockerfile
-      environment:
-        DB_HOST: db
-        DB_PORT: 3306
-      volumes:
-        - app_logs:/app/logs
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+    volumes:
+      - app_logs:/app/logs
+    labels:
+      com.docker.compose.container-number: "3" 
 
-    db:
-      image: sql:latest
-      environment:
-        MYSQL_ROOT_PASSWORD: root
-        MYSQL_DATABASE: test_db
-      volumes:
-        - db_data:/var/lib/sql
-        - db_logs:/var/log/sql
+  db:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-db
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test_db
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d/
+    labels:
+      com.docker.compose.container-number: "1" 
 
-  volumes:
-    app_logs:
-    db_data:
-    db_logs:
-
+volumes:
+  app_logs:
+  db_data:
+  db_logs:
